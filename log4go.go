@@ -78,6 +78,10 @@ const (
 	CRITICAL
 )
 
+const (
+	DEFAULT_CALLER_SKIP = 2
+)
+
 // Logging level strings
 var (
 	levelStrings = [...]string{"FNST", "FINE", "DEBG", "TRAC", "INFO", "WARN", "EROR", "CRIT"}
@@ -190,7 +194,7 @@ func (log Logger) AddFilter(name string, lvl Level, writer LogWriter, categorys 
 
 /******* Logging *******/
 // Send a formatted log message internally
-func (log Logger) intLogf(lvl Level, format string, args ...interface{}) {
+func (log Logger) intLogf(lvl Level, callerSkip int, format string, args ...interface{}) {
 	skip := true
 
 	// Determine if any logging will be done
@@ -205,7 +209,7 @@ func (log Logger) intLogf(lvl Level, format string, args ...interface{}) {
 	}
 
 	// Determine caller func
-	pc, _, lineno, ok := runtime.Caller(2)
+	pc, _, lineno, ok := runtime.Caller(callerSkip)
 	src := ""
 	if ok {
 		src = fmt.Sprintf("%s:%d", runtime.FuncForPC(pc).Name(), lineno)
@@ -234,7 +238,7 @@ func (log Logger) intLogf(lvl Level, format string, args ...interface{}) {
 }
 
 // Send a closure log message internally
-func (log Logger) intLogc(lvl Level, closure func() string) {
+func (log Logger) intLogc(lvl Level, callerSkip int, closure func() string) {
 	skip := true
 
 	// Determine if any logging will be done
@@ -249,7 +253,7 @@ func (log Logger) intLogc(lvl Level, closure func() string) {
 	}
 
 	// Determine caller func
-	pc, _, lineno, ok := runtime.Caller(2)
+	pc, _, lineno, ok := runtime.Caller(callerSkip)
 	src := ""
 	if ok {
 		src = fmt.Sprintf("%s:%d", runtime.FuncForPC(pc).Name(), lineno)
@@ -307,13 +311,13 @@ func (log Logger) Log(lvl Level, source, message string) {
 // Logf logs a formatted log message at the given log level, using the caller as
 // its source.
 func (log Logger) Logf(lvl Level, format string, args ...interface{}) {
-	log.intLogf(lvl, format, args...)
+	log.intLogf(lvl, DEFAULT_CALLER_SKIP, format, args...)
 }
 
 // Logc logs a string returned by the closure at the given log level, using the caller as
 // its source.  If no log message would be written, the closure is never called.
 func (log Logger) Logc(lvl Level, closure func() string) {
-	log.intLogc(lvl, closure)
+	log.intLogc(lvl, DEFAULT_CALLER_SKIP, closure)
 }
 
 // Finest logs a message at the finest log level.
@@ -325,13 +329,13 @@ func (log Logger) Finest(arg0 interface{}, args ...interface{}) {
 	switch first := arg0.(type) {
 	case string:
 		// Use the string as a format string
-		log.intLogf(lvl, first, args...)
+		log.intLogf(lvl, DEFAULT_CALLER_SKIP, first, args...)
 	case func() string:
 		// Log the closure (no other arguments used)
-		log.intLogc(lvl, first)
+		log.intLogc(lvl, DEFAULT_CALLER_SKIP, first)
 	default:
 		// Build a format string so that it will be similar to Sprint
-		log.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+		log.intLogf(lvl, DEFAULT_CALLER_SKIP, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
 	}
 }
 
@@ -344,13 +348,13 @@ func (log Logger) Fine(arg0 interface{}, args ...interface{}) {
 	switch first := arg0.(type) {
 	case string:
 		// Use the string as a format string
-		log.intLogf(lvl, first, args...)
+		log.intLogf(lvl, DEFAULT_CALLER_SKIP, first, args...)
 	case func() string:
 		// Log the closure (no other arguments used)
-		log.intLogc(lvl, first)
+		log.intLogc(lvl, DEFAULT_CALLER_SKIP, first)
 	default:
 		// Build a format string so that it will be similar to Sprint
-		log.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+		log.intLogf(lvl, DEFAULT_CALLER_SKIP, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
 	}
 }
 
@@ -373,13 +377,13 @@ func (log Logger) Debug(arg0 interface{}, args ...interface{}) {
 	switch first := arg0.(type) {
 	case string:
 		// Use the string as a format string
-		log.intLogf(lvl, first, args...)
+		log.intLogf(lvl, DEFAULT_CALLER_SKIP, first, args...)
 	case func() string:
 		// Log the closure (no other arguments used)
-		log.intLogc(lvl, first)
+		log.intLogc(lvl, DEFAULT_CALLER_SKIP, first)
 	default:
 		// Build a format string so that it will be similar to Sprint
-		log.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+		log.intLogf(lvl, DEFAULT_CALLER_SKIP, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
 	}
 }
 
@@ -392,13 +396,13 @@ func (log Logger) Trace(arg0 interface{}, args ...interface{}) {
 	switch first := arg0.(type) {
 	case string:
 		// Use the string as a format string
-		log.intLogf(lvl, first, args...)
+		log.intLogf(lvl, DEFAULT_CALLER_SKIP, first, args...)
 	case func() string:
 		// Log the closure (no other arguments used)
-		log.intLogc(lvl, first)
+		log.intLogc(lvl, DEFAULT_CALLER_SKIP, first)
 	default:
 		// Build a format string so that it will be similar to Sprint
-		log.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+		log.intLogf(lvl, DEFAULT_CALLER_SKIP, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
 	}
 }
 
@@ -411,13 +415,13 @@ func (log Logger) Info(arg0 interface{}, args ...interface{}) {
 	switch first := arg0.(type) {
 	case string:
 		// Use the string as a format string
-		log.intLogf(lvl, first, args...)
+		log.intLogf(lvl, DEFAULT_CALLER_SKIP, first, args...)
 	case func() string:
 		// Log the closure (no other arguments used)
-		log.intLogc(lvl, first)
+		log.intLogc(lvl, DEFAULT_CALLER_SKIP, first)
 	default:
 		// Build a format string so that it will be similar to Sprint
-		log.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+		log.intLogf(lvl, DEFAULT_CALLER_SKIP, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
 	}
 }
 
@@ -442,7 +446,7 @@ func (log Logger) Warn(arg0 interface{}, args ...interface{}) error {
 		// Build a format string so that it will be similar to Sprint
 		msg = fmt.Sprintf(fmt.Sprint(first)+strings.Repeat(" %v", len(args)), args...)
 	}
-	log.intLogf(lvl, msg)
+	log.intLogf(lvl, DEFAULT_CALLER_SKIP, msg)
 	return errors.New(msg)
 }
 
@@ -465,7 +469,7 @@ func (log Logger) Error(arg0 interface{}, args ...interface{}) error {
 		// Build a format string so that it will be similar to Sprint
 		msg = fmt.Sprintf(fmt.Sprint(first)+strings.Repeat(" %v", len(args)), args...)
 	}
-	log.intLogf(lvl, msg)
+	log.intLogf(lvl, DEFAULT_CALLER_SKIP, msg)
 	return errors.New(msg)
 }
 
@@ -488,6 +492,6 @@ func (log Logger) Critical(arg0 interface{}, args ...interface{}) error {
 		// Build a format string so that it will be similar to Sprint
 		msg = fmt.Sprintf(fmt.Sprint(first)+strings.Repeat(" %v", len(args)), args...)
 	}
-	log.intLogf(lvl, msg)
+	log.intLogf(lvl, DEFAULT_CALLER_SKIP, msg)
 	return errors.New(msg)
 }

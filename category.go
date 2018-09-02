@@ -20,7 +20,7 @@ func LOGGER(category string) *Filter {
 }
 
 // Send a formatted log message internally
-func (f *Filter) intLogf(lvl Level, format string, args ...interface{}) {
+func (f *Filter) intLogf(lvl Level, callerSkip int, format string, args ...interface{}) {
 	skip := true
 
 	// Determine if any logging will be done
@@ -32,7 +32,7 @@ func (f *Filter) intLogf(lvl Level, format string, args ...interface{}) {
 	}
 
 	// Determine caller func
-	pc, _, lineno, ok := runtime.Caller(2)
+	pc, _, lineno, ok := runtime.Caller(callerSkip)
 	src := ""
 	if ok {
 		src = fmt.Sprintf("%s:%d", runtime.FuncForPC(pc).Name(), lineno)
@@ -73,7 +73,7 @@ func (f *Filter) intLogf(lvl Level, format string, args ...interface{}) {
 }
 
 // Send a closure log message internally
-func (f *Filter) intLogc(lvl Level, closure func() string) {
+func (f *Filter) intLogc(lvl Level, callerSkip int, closure func() string) {
 	skip := true
 
 	// Determine if any logging will be done
@@ -85,7 +85,7 @@ func (f *Filter) intLogc(lvl Level, closure func() string) {
 	}
 
 	// Determine caller func
-	pc, _, lineno, ok := runtime.Caller(2)
+	pc, _, lineno, ok := runtime.Caller(callerSkip)
 	src := ""
 	if ok {
 		src = fmt.Sprintf("%s:%d", runtime.FuncForPC(pc).Name(), lineno)
@@ -145,14 +145,14 @@ func (f *Filter) Log(lvl Level, source, message string) {
 
 // Logf logs a formatted log message at the given log level, using the caller as
 // its source.
-func (f *Filter) Logf(lvl Level, format string, args ...interface{}) {
-	f.intLogf(lvl, format, args...)
+func (f *Filter) Logf(lvl Level, callerSkip int, format string, args ...interface{}) {
+	f.intLogf(lvl, callerSkip, format, args...)
 }
 
 // Logc logs a string returned by the closure at the given log level, using the caller as
 // its source.  If no log message would be written, the closure is never called.
-func (f *Filter) Logc(lvl Level, closure func() string) {
-	f.intLogc(lvl, closure)
+func (f *Filter) Logc(lvl Level, callerSkip int, closure func() string) {
+	f.intLogc(lvl, callerSkip, closure)
 }
 
 // Finest logs a message at the finest log level.
@@ -164,13 +164,13 @@ func (f *Filter) Finest(arg0 interface{}, args ...interface{}) {
 	switch first := arg0.(type) {
 	case string:
 		// Use the string as a format string
-		f.intLogf(lvl, first, args...)
+		f.intLogf(lvl, DEFAULT_CALLER_SKIP, first, args...)
 	case func() string:
 		// Log the closure (no other arguments used)
-		f.intLogc(lvl, first)
+		f.intLogc(lvl, DEFAULT_CALLER_SKIP, first)
 	default:
 		// Build a format string so that it will be similar to Sprint
-		f.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+		f.intLogf(lvl, DEFAULT_CALLER_SKIP, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
 	}
 }
 
@@ -183,13 +183,13 @@ func (f *Filter) Fine(arg0 interface{}, args ...interface{}) {
 	switch first := arg0.(type) {
 	case string:
 		// Use the string as a format string
-		f.intLogf(lvl, first, args...)
+		f.intLogf(lvl, DEFAULT_CALLER_SKIP, first, args...)
 	case func() string:
 		// f the closure (no other arguments used)
-		f.intLogc(lvl, first)
+		f.intLogc(lvl, DEFAULT_CALLER_SKIP, first)
 	default:
 		// Build a format string so that it will be similar to Sprint
-		f.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+		f.intLogf(lvl, DEFAULT_CALLER_SKIP, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
 	}
 }
 
@@ -212,13 +212,30 @@ func (f *Filter) Debug(arg0 interface{}, args ...interface{}) {
 	switch first := arg0.(type) {
 	case string:
 		// Use the string as a format string
-		f.intLogf(lvl, first, args...)
+		f.intLogf(lvl, DEFAULT_CALLER_SKIP, first, args...)
 	case func() string:
 		// f the closure (no other arguments used)
-		f.intLogc(lvl, first)
+		f.intLogc(lvl, DEFAULT_CALLER_SKIP, first)
 	default:
 		// Build a format string so that it will be similar to Sprint
-		f.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+		f.intLogf(lvl, DEFAULT_CALLER_SKIP, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+	}
+}
+
+func (f *Filter) DebugDepth(callerSkip int, arg0 interface{}, args ...interface{}) {
+	const (
+		lvl = DEBUG
+	)
+	switch first := arg0.(type) {
+	case string:
+		// Use the string as a format string
+		f.intLogf(lvl, callerSkip, first, args...)
+	case func() string:
+		// f the closure (no other arguments used)
+		f.intLogc(lvl, callerSkip, first)
+	default:
+		// Build a format string so that it will be similar to Sprint
+		f.intLogf(lvl, callerSkip, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
 	}
 }
 
@@ -231,13 +248,13 @@ func (f *Filter) Trace(arg0 interface{}, args ...interface{}) {
 	switch first := arg0.(type) {
 	case string:
 		// Use the string as a format string
-		f.intLogf(lvl, first, args...)
+		f.intLogf(lvl, DEFAULT_CALLER_SKIP, first, args...)
 	case func() string:
 		// f the closure (no other arguments used)
-		f.intLogc(lvl, first)
+		f.intLogc(lvl, DEFAULT_CALLER_SKIP, first)
 	default:
 		// Build a format string so that it will be similar to Sprint
-		f.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+		f.intLogf(lvl, DEFAULT_CALLER_SKIP, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
 	}
 }
 
@@ -250,13 +267,30 @@ func (f *Filter) Info(arg0 interface{}, args ...interface{}) {
 	switch first := arg0.(type) {
 	case string:
 		// Use the string as a format string
-		f.intLogf(lvl, first, args...)
+		f.intLogf(lvl, DEFAULT_CALLER_SKIP, first, args...)
 	case func() string:
 		// f the closure (no other arguments used)
-		f.intLogc(lvl, first)
+		f.intLogc(lvl, DEFAULT_CALLER_SKIP, first)
 	default:
 		// Build a format string so that it will be similar to Sprint
-		f.intLogf(lvl, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+		f.intLogf(lvl, DEFAULT_CALLER_SKIP, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
+	}
+}
+
+func (f *Filter) InfoDepth(callerSkip int, arg0 interface{}, args ...interface{}) {
+	const (
+		lvl = INFO
+	)
+	switch first := arg0.(type) {
+	case string:
+		// Use the string as a format string
+		f.intLogf(lvl, callerSkip, first, args...)
+	case func() string:
+		// f the closure (no other arguments used)
+		f.intLogc(lvl, callerSkip, first)
+	default:
+		// Build a format string so that it will be similar to Sprint
+		f.intLogf(lvl, callerSkip, fmt.Sprint(arg0)+strings.Repeat(" %v", len(args)), args...)
 	}
 }
 
@@ -281,7 +315,26 @@ func (f *Filter) Warn(arg0 interface{}, args ...interface{}) {
 		// Build a format string so that it will be similar to Sprint
 		msg = fmt.Sprintf(fmt.Sprint(first)+strings.Repeat(" %v", len(args)), args...)
 	}
-	f.intLogf(lvl, msg)
+	f.intLogf(lvl, DEFAULT_CALLER_SKIP, msg)
+}
+
+func (f *Filter) WarnDepth(callerSkip int, arg0 interface{}, args ...interface{}) {
+	const (
+		lvl = WARNING
+	)
+	var msg string
+	switch first := arg0.(type) {
+	case string:
+		// Use the string as a format string
+		msg = fmt.Sprintf(first, args...)
+	case func() string:
+		// f the closure (no other arguments used)
+		msg = first()
+	default:
+		// Build a format string so that it will be similar to Sprint
+		msg = fmt.Sprintf(fmt.Sprint(first)+strings.Repeat(" %v", len(args)), args...)
+	}
+	f.intLogf(lvl, callerSkip, msg)
 }
 
 // Error fs a message at the error f level and returns the formatted error,
@@ -303,7 +356,26 @@ func (f *Filter) Error(arg0 interface{}, args ...interface{}) {
 		// Build a format string so that it will be similar to Sprint
 		msg = fmt.Sprintf(fmt.Sprint(first)+strings.Repeat(" %v", len(args)), args...)
 	}
-	f.intLogf(lvl, msg)
+	f.intLogf(lvl, DEFAULT_CALLER_SKIP, msg)
+}
+
+func (f *Filter) ErrorDepth(callerSkip int, arg0 interface{}, args ...interface{}) {
+	const (
+		lvl = ERROR
+	)
+	var msg string
+	switch first := arg0.(type) {
+	case string:
+		// Use the string as a format string
+		msg = fmt.Sprintf(first, args...)
+	case func() string:
+		// f the closure (no other arguments used)
+		msg = first()
+	default:
+		// Build a format string so that it will be similar to Sprint
+		msg = fmt.Sprintf(fmt.Sprint(first)+strings.Repeat(" %v", len(args)), args...)
+	}
+	f.intLogf(lvl, callerSkip, msg)
 }
 
 // Critical fs a message at the critical f level and returns the formatted error,
@@ -325,5 +397,24 @@ func (f *Filter) Critical(arg0 interface{}, args ...interface{}) {
 		// Build a format string so that it will be similar to Sprint
 		msg = fmt.Sprintf(fmt.Sprint(first)+strings.Repeat(" %v", len(args)), args...)
 	}
-	f.intLogf(lvl, msg)
+	f.intLogf(lvl, DEFAULT_CALLER_SKIP, msg)
+}
+
+func (f *Filter) CriticalDepth(callerSkip int, arg0 interface{}, args ...interface{}) {
+	const (
+		lvl = CRITICAL
+	)
+	var msg string
+	switch first := arg0.(type) {
+	case string:
+		// Use the string as a format string
+		msg = fmt.Sprintf(first, args...)
+	case func() string:
+		// f the closure (no other arguments used)
+		msg = first()
+	default:
+		// Build a format string so that it will be similar to Sprint
+		msg = fmt.Sprintf(fmt.Sprint(first)+strings.Repeat(" %v", len(args)), args...)
+	}
+	f.intLogf(lvl, callerSkip, msg)
 }
