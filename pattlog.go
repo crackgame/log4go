@@ -17,7 +17,7 @@ const (
 )
 
 type formatCacheType struct {
-	LastUpdateSeconds    int64
+	LastUpdate           int64
 	shortTime, shortDate string
 	longTime, longDate   string
 }
@@ -43,19 +43,20 @@ func FormatLogRecord(format string, rec *LogRecord) string {
 	}
 
 	out := bytes.NewBuffer(make([]byte, 0, 64))
-	secs := rec.Created.UnixNano() / 1e9
+	//timestamp := rec.Created.UnixNano() / 1e9
+	timestamp := rec.Created.UnixNano()
 
 	cache := *formatCache
-	if cache.LastUpdateSeconds != secs {
+	if cache.LastUpdate != timestamp {
 		month, day, year := rec.Created.Month(), rec.Created.Day(), rec.Created.Year()
-		hour, minute, second := rec.Created.Hour(), rec.Created.Minute(), rec.Created.Second()
+		hour, minute, second, nanosec := rec.Created.Hour(), rec.Created.Minute(), rec.Created.Second(), rec.Created.Nanosecond()
 		zone, _ := rec.Created.Zone()
 		updated := &formatCacheType{
-			LastUpdateSeconds: secs,
-			shortTime:         fmt.Sprintf("%02d:%02d", hour, minute),
-			shortDate:         fmt.Sprintf("%02d/%02d/%02d", day, month, year%100),
-			longTime:          fmt.Sprintf("%02d:%02d:%02d %s", hour, minute, second, zone),
-			longDate:          fmt.Sprintf("%04d/%02d/%02d", year, month, day),
+			LastUpdate: timestamp,
+			shortTime:  fmt.Sprintf("%02d:%02d", hour, minute),
+			shortDate:  fmt.Sprintf("%02d/%02d/%02d", day, month, year%100),
+			longTime:   fmt.Sprintf("%02d:%02d:%02d.%06d %s", hour, minute, second, nanosec/1000, zone),
+			longDate:   fmt.Sprintf("%04d/%02d/%02d", year, month, day),
 		}
 		cache = *updated
 		formatCache = updated

@@ -32,11 +32,14 @@ func (f *Filter) intLogf(lvl Level, callerSkip int, format string, args ...inter
 	}
 
 	// Determine caller func
-	pc, _, lineno, ok := runtime.Caller(callerSkip)
+	pc, file, lineno, ok := runtime.Caller(callerSkip)
 	src := ""
 	if ok {
-		src = fmt.Sprintf("%s:%d", runtime.FuncForPC(pc).Name(), lineno)
+		src = fmt.Sprintf("(%s:%d) (%s)", file, lineno, runtime.FuncForPC(pc).Name())
 	}
+
+	//filename, fileline := runtime.FuncForPC(pc).FileLine(pc)
+	//fmt.Println("xxxxxxxxxxxxx:", file, filename, fileline, lineno)
 
 	msg := format
 	if len(args) > 0 {
