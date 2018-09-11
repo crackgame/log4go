@@ -94,6 +94,7 @@ func NewFileLogWriter(fname string, rotate bool, daily bool) *FileLogWriter {
 				if !ok {
 					return
 				}
+
 				now := time.Now()
 				if (w.maxlines > 0 && w.maxlines_curlines >= w.maxlines) ||
 					(w.maxsize > 0 && w.maxsize_cursize >= w.maxsize) ||
