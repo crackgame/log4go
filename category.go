@@ -32,10 +32,10 @@ func (f *Filter) intLogf(lvl Level, callerSkip int, format string, args ...inter
 	}
 
 	// Determine caller func
-	pc, file, lineno, ok := runtime.Caller(callerSkip)
+	pc, _, lineno, ok := runtime.Caller(callerSkip)
 	src := ""
 	if ok {
-		src = fmt.Sprintf("(%s:%d) (%s)", file, lineno, runtime.FuncForPC(pc).Name())
+		src = fmt.Sprintf("%s:%d", runtime.FuncForPC(pc).Name(), lineno)
 	}
 
 	//filename, fileline := runtime.FuncForPC(pc).FileLine(pc)
@@ -65,7 +65,7 @@ func (f *Filter) intLogf(lvl Level, callerSkip int, format string, args ...inter
 	*/
 	default_filter := Global["stdout"]
 
-	if lvl >= default_filter.Level {
+	if lvl > default_filter.Level {
 		default_filter.LogWrite(rec)
 	}
 
@@ -105,7 +105,7 @@ func (f *Filter) intLogc(lvl Level, callerSkip int, closure func() string) {
 
 	default_filter := Global["stdout"]
 
-	if lvl >= default_filter.Level {
+	if lvl > default_filter.Level {
 		default_filter.LogWrite(rec)
 	}
 
@@ -137,7 +137,7 @@ func (f *Filter) Log(lvl Level, source, message string) {
 
 	default_filter := Global["stdout"]
 
-	if lvl >= default_filter.Level {
+	if lvl > default_filter.Level {
 		default_filter.LogWrite(rec)
 	}
 
