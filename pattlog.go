@@ -16,14 +16,6 @@ const (
 	FORMAT_ABBREV  = "[%L] %M"
 )
 
-type formatCacheType struct {
-	LastUpdate           int64
-	shortTime, shortDate string
-	longTime, longDate   string
-}
-
-var formatCache = &formatCacheType{}
-
 // Known format codes:
 // %T - Time (15:04:05 MST)
 // %t - Time (15:04)
@@ -43,25 +35,15 @@ func FormatLogRecord(format string, rec *LogRecord) string {
 	}
 
 	out := bytes.NewBuffer(make([]byte, 0, 64))
-	//timestamp := rec.Created.UnixNano() / 1e9
-	timestamp := rec.Created.UnixNano()
 
-	cache := *formatCache
-	if cache.LastUpdate != timestamp {
-		month, day, year := rec.Created.Month(), rec.Created.Day(), rec.Created.Year()
-		hour, minute, second, nanosec := rec.Created.Hour(), rec.Created.Minute(), rec.Created.Second(), rec.Created.Nanosecond()
-		zone, _ := rec.Created.Zone()
-		updated := &formatCacheType{
-			LastUpdate: timestamp,
-			shortTime:  fmt.Sprintf("%02d:%02d", hour, minute),
-			shortDate:  fmt.Sprintf("%02d/%02d/%02d", day, month, year%100),
-			longTime:   fmt.Sprintf("%02d:%02d:%02d.%06d %s", hour, minute, second, nanosec/1000, zone),
-			longDate:   fmt.Sprintf("%04d/%02d/%02d", year, month, day),
-		}
-		cache = *updated
-		formatCache = updated
+	month, day, year := rec.Created.Month(), rec.Created.Day(), rec.Created.Year()
+	hour, minute, second, nanosec := rec.Created.Hour(), rec.Created.Minute(), rec.Created.Second(), rec.Created.Nanosecond()
+	zone, _ := rec.Created.Zone()
+	shortTime := fmt.Sprintf("%02d:%02d", hour, minute)
+	shortDate := fmt.Sprintf("%02d/%02d/%02d", day, month, year%100)
+	longTime := fmt.Sprintf("%02d:%02d:%02d.%06d %s", hour, minute, second, nanosec/1000, zone)
+	longDate := fmt.Sprintf("%04d/%02d/%02d", year, month, day)
 
-	}
 	//custom format datetime pattern %D{2006-01-02T15:04:05}
 	formatByte := changeDttmFormat(format, rec)
 	// Split the string into pieces by % signs
@@ -72,13 +54,13 @@ func FormatLogRecord(format string, rec *LogRecord) string {
 		if i > 0 && len(piece) > 0 {
 			switch piece[0] {
 			case 'T':
-				out.WriteString(cache.longTime)
+				out.WriteString(longTime)
 			case 't':
-				out.WriteString(cache.shortTime)
+				out.WriteString(shortTime)
 			case 'D':
-				out.WriteString(cache.longDate)
+				out.WriteString(longDate)
 			case 'd':
-				out.WriteString(cache.shortDate)
+				out.WriteString(shortDate)
 			case 'L':
 				out.WriteString(levelStrings[rec.Level])
 			case 'S':
